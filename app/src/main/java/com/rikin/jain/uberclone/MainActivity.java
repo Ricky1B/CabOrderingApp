@@ -1,5 +1,6 @@
 package com.rikin.jain.uberclone;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -15,6 +16,7 @@ import com.parse.ParseAnonymousUtils;
 import com.parse.ParseException;
 import com.parse.ParseInstallation;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 import com.parse.SignUpCallback;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                        public void done(ParseException e) {
                            if(e == null){
                                Toast.makeText(MainActivity.this,"Signed Up",Toast.LENGTH_SHORT).show();
+                               transitionToPassengerActivity();
                            }
                        }
                    });
@@ -53,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                        public void done(ParseUser user, ParseException e) {
                            if(user != null && e==null){
                                Toast.makeText(MainActivity.this,"User logged in",Toast.LENGTH_SHORT).show();
+                               transitionToPassengerActivity();
 
                            }
                        }
@@ -68,7 +72,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                if(user !=null && e == null){
                                    Toast.makeText(MainActivity.this,"We have an anonymous user",Toast.LENGTH_SHORT).show();
                                    user.put("as",edtPassengerOrDriver.getText().toString());
-                                   user.saveInBackground();
+                                   user.saveInBackground(new SaveCallback() {
+                                       @Override
+                                       public void done(ParseException e) {
+                                           if(e==null){
+                                               transitionToPassengerActivity();
+                                           }
+                                       }
+                                   });
                                }
                            }
                        });
@@ -99,7 +110,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         ParseInstallation.getCurrentInstallation().saveInBackground();
         if(ParseUser.getCurrentUser() != null){
-            ParseUser.logOut();
+            //ParseUser.logOut();
+            transitionToPassengerActivity();
         }
         state = State.SIGNUP;
         btnSignUpLogIn = findViewById(R.id.btnSignUpLogIn);
@@ -136,5 +148,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                break;
        }
         return super.onOptionsItemSelected(item);
+    }
+    public void transitionToPassengerActivity(){
+        if(ParseUser.getCurrentUser() != null){
+            if(ParseUser.getCurrentUser().get("as").equals("Passenger")){
+                Intent intent = new Intent(MainActivity.this,PassengerActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        }
     }
 }
